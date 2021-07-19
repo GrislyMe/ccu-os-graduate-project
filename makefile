@@ -8,3 +8,6 @@ all: ${EXE}
 
 %:	%.c
 	${CC} ${CFLAGS} $@.c -o $@.o
+
+test:
+	./test.sh
