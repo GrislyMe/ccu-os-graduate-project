@@ -18,6 +18,15 @@ The lstopo graph on Ryzen 4750u
 The lstopo graph on Ryzen 3500x
 ![](https://i.imgur.com/fQe1O73.png)
 
+## STEP
+1. useing [whlie_test.c](https://github.com/GrislyMe/ccu-os-graduate-project/blob/main/while_test.c) redirect to result
+```shell=zsh
+timeout --signal="SIGHUP" 5s ./while_test.o > result
+```
+2. run the [python script](https://github.com/GrislyMe/ccu-os-graduate-project/blob/main/visual.py) to visualize the data in result
+```shell=zsh
+./visual.py
+```
 
 
 ## RESULT
