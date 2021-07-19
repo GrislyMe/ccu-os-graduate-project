@@ -50,6 +50,7 @@ int main() {
     // main function info
     int cpu = sched_getcpu();
     struct timespec main_clock;
+    //pre_cpu = cpu;
     //printf("Main function using CPU : %d\n", cpu);
     clock_gettime(CLOCK_REALTIME, &main_clock);
     previous = main_clock;

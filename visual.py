@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import numpy as np
@@ -6,12 +6,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import subprocess
 
-thread_num = 16
+thread_num = 6
 
 def getTime():
-    testRound = 100
-    args = ("./threadSwitch.o")
-    nsec = 0;
+    testRound = 1
+    args = ("./while_test.o")
     time = np.array([[0 * i for i in range(thread_num)]] * thread_num)
     for r in range(testRound):
         popen = subprocess.Popen(args, stdout=subprocess.PIPE)
@@ -20,19 +19,19 @@ def getTime():
         output = output.decode(sys.stdout.encoding).split("\n")
         for i in output[:-2]:
             tmp = i.split()
-            s = int(tmp[4])
-            d = int(tmp[6])
-            print(tmp, s, d)
-            if(s >= 0 and d >= 0 and s != d):
-                time[s, d] += int(tmp[2])
+            s = int(tmp[7])
+            d = int(tmp[9])
+            #print(tmp, s, d)
+            if(s >= 0 and d >= 0):
+                time[s, d] += int(tmp[3])
                 time[s, d] /= 2;
-                print(time[s, d])
+                #print(time[s, d])
     return time
 
 
 
 def main():
-    cpu = [i for i in range(thread_num)];
+    cpu = [i for i in range(thread_num)]
 
     time = getTime()
 
