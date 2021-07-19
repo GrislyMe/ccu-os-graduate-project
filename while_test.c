@@ -33,14 +33,16 @@ void thread()
         clock_gettime(CLOCK_REALTIME, &current);
 
         for(int i=0; i<16; i++){
-            global_data[i] *= 2.5;
+            global_data[i] *= 2.5 + i;
         }
 
         time_diff_sec = (current.tv_sec - previous.tv_sec);
         time_diff_nsec = (current.tv_nsec - previous.tv_nsec);
         int cpu = sched_getcpu();
         printf("{ %ld sec %ld nsec } , { %d -> %d }\n", time_diff_sec, time_diff_nsec, pre_cpu, cpu);
+        clock_gettime(CLOCK_REALTIME, &current);
         pre_cpu = cpu;
+        previous = current;
         
         pthread_spin_unlock(&lock);
         clock_gettime(CLOCK_REALTIME, &end_time);
@@ -49,7 +51,6 @@ void thread()
         while(1){
             clock_gettime(CLOCK_REALTIME, &current);
             if((current.tv_nsec - end_time.tv_nsec) > RS_size){
-                previous = current;
                 break;
             }
         }

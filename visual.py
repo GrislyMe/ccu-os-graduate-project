@@ -6,26 +6,39 @@ import matplotlib
 import matplotlib.pyplot as plt
 import subprocess
 
-thread_num = 6
+thread_num = 16
 
 def getTime():
     testRound = 1
     args = ("./while_test.o")
     time = np.array([[0 * i for i in range(thread_num)]] * thread_num)
-    for r in range(testRound):
-        popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-        popen.wait()
-        output, err_out= popen.communicate()
-        output = output.decode(sys.stdout.encoding).split("\n")
-        for i in output[:-2]:
+    with open("./result", 'r') as output:
+        for i in output.readlines()[:-2]:
             tmp = i.split()
-            s = int(tmp[7])
-            d = int(tmp[9])
+            s = int(tmp[8])
+            d = int(tmp[10])
             #print(tmp, s, d)
             if(s >= 0 and d >= 0):
+                if(int(tmp[3]) > 3000):
+                    continue
                 time[s, d] += int(tmp[3])
                 time[s, d] /= 2;
                 #print(time[s, d])
+        
+    # for r in range(testRound):
+    #     popen = subprocess.Popen(args, stdout=subprocess.PIPE)
+    #     popen.wait()
+    #     output, err_out= popen.communicate()
+    #     output = output.decode(sys.stdout.encoding).split("\n")
+    #     for i in output[:-2]:
+    #         tmp = i.split()
+    #         s = int(tmp[7])
+    #         d = int(tmp[9])
+    #         #print(tmp, s, d)
+    #         if(s >= 0 and d >= 0):
+    #             time[s, d] += int(tmp[3])
+    #             time[s, d] /= 2;
+    #             #print(time[s, d])
     return time
 
 
