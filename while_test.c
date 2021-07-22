@@ -10,7 +10,7 @@
 #include <sys/syscall.h>
 #include <assert.h>
 #include <string.h>
-
+#include <errno.h>
 int pre_cpu = -1;
 pthread_spinlock_t lock;
 struct timespec previous;
@@ -36,9 +36,9 @@ void thread(void* assign_cpu)
 	thread_data[(int)assign_cpu] = &var;
 	
 	// recommand k <= atleast 10^7
-	for(int k=1; k<=5000000 ;k++){
+	for(int k=1; k<=500000 ;k++){
         // spin lock
-        pthread_spin_lock(&lock);
+		pthread_spin_lock(&lock);
 		//prevent main to thread make SEGFAULT
 		if(pre_cpu == -1){
 			pre_cpu = cpu;
@@ -51,7 +51,6 @@ void thread(void* assign_cpu)
 		// reading thread local data from pre_cpu
 		for(int i=0;i<100;i++){
 			(*thread_data[ pre_cpu ]) = (*thread_data[ pre_cpu ]) * 2 + 7;
-			(*thread_data[ pre_cpu ]) = 15000 + (*thread_data[ pre_cpu ]) * 2;
 		}
 		//// gettime after changing thread local data
 		clock_gettime(CLOCK_REALTIME, &current);
