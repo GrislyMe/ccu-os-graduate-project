@@ -1,6 +1,6 @@
 SHELL = /bin/bash
 CC = gcc
-CFLAGS = -pthread -march=znver1 -O3
+CFLAGS = -std=c11 -pthread -march=znver1 -Wall -O3
 SRC = $(wildcard *.c)
 EXE = $(patsubst %.c, %, $(SRC))
 

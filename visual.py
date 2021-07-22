@@ -6,7 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import subprocess
 
-thread_num = 16
+thread_num = 6
 
 def getTime():
     testRound = 1
