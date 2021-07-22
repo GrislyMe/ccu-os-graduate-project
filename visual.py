@@ -13,7 +13,7 @@ def getTime():
     args = ("./while_test.o")
     time = np.array([[0 * i for i in range(thread_num)]] * thread_num)
     with open("./result", 'r') as output:
-        for i in output.readlines()[:-2]:
+        for i in output.readlines()[:]:
             tmp = i.split()
             s = int(tmp[8])
             d = int(tmp[10])
@@ -22,7 +22,7 @@ def getTime():
                 if(int(tmp[3]) > 3000):
                     continue
                 time[s, d] += int(tmp[3])
-                time[s, d] /= 2;
+                #time[s, d] /= 2;
                 #print(time[s, d])
         
     # for r in range(testRound):

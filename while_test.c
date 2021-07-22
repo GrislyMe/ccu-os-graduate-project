@@ -24,34 +24,40 @@ int** thread_data;
 void thread(void* assign_cpu)
 {
     struct timespec current;
+	long diff_nsec;
+	// CPU assign (order by forloop in main function)
 	cpu_set_t setthread;
 	CPU_ZERO(&setthread);
 	CPU_SET((int)assign_cpu, &setthread);
 	pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &setthread);
 	int cpu = sched_getcpu();
-	long diff_nsec;
+	// init _Thread_local variable in this thread, and log it reference in global array
 	static _Thread_local int var = 25;
 	thread_data[(int)assign_cpu] = &var;
 	
-	for(int k=1; k<=10000000 ;k++){
+	// recommand k <= atleast 10^7
+	for(int k=1; k<=5000000 ;k++){
         // spin lock
         pthread_spin_lock(&lock);
+		//prevent main to thread make SEGFAULT
 		if(pre_cpu == -1){
 			pre_cpu = cpu;
 			pthread_spin_unlock(&lock);
 			continue;
 		}
+
+		// get time before changing thread local data
         clock_gettime(CLOCK_REALTIME, &previous);
-        // critical section
 		// reading thread local data from pre_cpu
-		for(int i=0;i<50;i++){
-			(*thread_data[ pre_cpu ]) *= 7;
-			var += (*thread_data[ pre_cpu ]) + 11;
+		for(int i=0;i<100;i++){
+			(*thread_data[ pre_cpu ]) = (*thread_data[ pre_cpu ]) * 2 + 7;
+			(*thread_data[ pre_cpu ]) = 15000 + (*thread_data[ pre_cpu ]) * 2;
 		}
-        clock_gettime(CLOCK_REALTIME, &current);
-		//// gettime after changing global_data
-		diff_nsec = current.tv_nsec - previous.tv_nsec;
+		//// gettime after changing thread local data
+		clock_gettime(CLOCK_REALTIME, &current);
 		
+		diff_nsec = current.tv_nsec - previous.tv_nsec;
+		////if different of time is reasonable, write in global matrix
 		if(diff_nsec < 5000 && diff_nsec > 0){
 			//printf("%ld nsec, %d -> %d\n", diff_nsec, pre_cpu, cpu);
 			past_times[ pre_cpu ][ cpu ] += diff_nsec;
@@ -59,11 +65,8 @@ void thread(void* assign_cpu)
 		}else{
 			//printf("Error: %d to %d is %ld\n",pre_cpu, cpu, diff_nsec);
 		}
-		//// log diffrent of current process and previous process
-		//// prevent MISS, take of which over 3000
+		// log cpuid as other thread's previous cpu
 		pre_cpu = cpu;
-        //previous = current;
-		//// write finish time let next thread can compute pasted time
 
         // unlock
 		pthread_spin_unlock(&lock);
