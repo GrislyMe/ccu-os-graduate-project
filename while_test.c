@@ -13,19 +13,19 @@
 #include <sys/sysinfo.h>
 #include <unistd.h>
 
-int                pre_cpu = -1;
+int pre_cpu = -1;
 pthread_spinlock_t lock;
-struct timespec    previous;
-double             global_data[128];
-long long int      past_times[16][16] = {0}, done_times[16][16] = {0};
-int                neg;
-int                num_cpu;
-cpu_set_t          set;
-int**              thread_data;
+struct timespec previous;
+double global_data[128];
+long long int past_times[16][16] = {0}, done_times[16][16] = {0};
+int neg;
+int num_cpu;
+cpu_set_t set;
+int** thread_data;
 
 void thread(int assign_cpu) {
 	struct timespec current;
-	long            diff_nsec;
+	long diff_nsec;
 	// CPU assign (order by forloop in main function)
 	cpu_set_t setthread;
 	CPU_ZERO(&setthread);
@@ -35,7 +35,7 @@ void thread(int assign_cpu) {
 	// init _Thread_local variable in this thread,
 	// and store its reference in global array
 	static _Thread_local int var = 25;
-	thread_data[assign_cpu]      = &var;
+	thread_data[assign_cpu] = &var;
 
 	// recommand k <= atleast 10^7
 	for (int k = 1; k <= 500000; k++) {
@@ -79,12 +79,12 @@ int main() {
 	pthread_spin_init(&lock, PTHREAD_PROCESS_PRIVATE);
 
 	// set the number of threads
-	num_cpu           = get_nprocs();
+	num_cpu = get_nprocs();
 	int num_of_thread = num_cpu;
 
 	// main function info
 	previous.tv_nsec = 0;
-	thread_data      = malloc(sizeof(int*) * num_of_thread);
+	thread_data = malloc(sizeof(int*) * num_of_thread);
 
 	// open file to write
 	FILE* out = fopen("result", "w");
