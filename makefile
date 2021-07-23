@@ -7,4 +7,4 @@ EXE = $(patsubst %.c, %.o, $(SRC))
 all: ${EXE}
 
 %.o: %.c
-	${CC} ${CFLAGS} $@.c -o $@.o
+	${CC} ${CFLAGS} $*.c -o $@
