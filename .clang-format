@@ -9,10 +9,10 @@ AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
 
 # 連續賦值時，對齊所有等號
-AlignConsecutiveAssignments: true
+AlignConsecutiveAssignments: false
 
 # 連續宣告時，對齊所有宣告的變數名稱
-AlignConsecutiveDeclarations: true
+AlignConsecutiveDeclarations: false
 
 # 左對齊跳脫換行（使用反斜杠換行）的反斜杠
 AlignEscapedNewlinesLeft: true
