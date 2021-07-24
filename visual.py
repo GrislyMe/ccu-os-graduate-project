@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 
-import sys
 import os
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
-import subprocess
 
 core_num = os.cpu_count()
 
 def getTime():
-    testRound = 1
-    args = ("./while_test.o")
     count = np.zeros(shape=(core_num, core_num))
     time = np.zeros(shape=(core_num, core_num))
     with open("./result", 'r') as output:
@@ -48,10 +43,13 @@ def main():
              rotation_mode="anchor")
 
     # Loop over data dimensions and create text annotations.
+    textcolors = ['w', 'k']
+    norm = im.norm(time)
     for i in range(core_num):
         for j in range(core_num):
             text = ax.text(j, i, int(time[i, j]),
-                           ha="center", va="center", color="w")
+                           ha="center", va="center", 
+                           color=textcolors[int(norm[i, j] > 0.5)])
 
     ax.set_title("context switch time")
     fig.tight_layout()
