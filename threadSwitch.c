@@ -14,7 +14,6 @@
 
 #define num_of_thread 64
 #define v_core get_nprocs()
-#define cpu sched_getcpu()
 
 pthread_spinlock_t lock;
 long long int timeCost[16][16] = {0};
@@ -25,6 +24,7 @@ struct timespec previous;
 
 void thread() {
 	struct timespec current;
+	int cpu;
 	long diff;
 
 	for (int t = 0; t < 100; t++) {
@@ -35,6 +35,7 @@ void thread() {
 		for (int i = 0; i < 128; i++)
 			globalData[i] *= 25.242;
 
+		cpu = sched_getcpu();
 		clock_gettime(CLOCK_REALTIME, &current);
 		diff = current.tv_nsec - previous.tv_nsec;
 		if (diff > 0 && diff < 10000) {
@@ -59,7 +60,7 @@ int main() {
 	pthread_t* tid = (pthread_t*)malloc(sizeof(pthread_t) * num_of_thread);
 
 	// clock and cpu init
-	pre_cpu = cpu;
+	pre_cpu = sched_getcpu();
 	clock_gettime(CLOCK_REALTIME, &previous);
 
 	for (int i = 0; i < num_of_thread; i++)
