@@ -18,7 +18,7 @@
 pthread_spinlock_t lock;
 long long int timeCost[16][16] = {0};
 int counter[16][16] = {0};
-volatile int pre_cpu;
+int pre_cpu;
 volatile double* globalData;
 struct timespec previous;
 
@@ -43,6 +43,7 @@ void thread() {
 			counter[pre_cpu][cpu]++;
 		}
 
+		clock_gettime(CLOCK_REALTIME, &current);
 		pre_cpu = cpu;
 		previous = current;
 
@@ -75,7 +76,7 @@ int main() {
 	for (int i = 0; i < v_core; i++)
 		for (int k = 0; k < v_core; k++)
 			if (counter[i][k])
-				fprintf(out, "{ %lld nsec } , { %d -> %d }\n", timeCost[i][k] / counter[i][k], i, k);
+				fprintf(out, "%lld %d %d %d\n", timeCost[i][k], counter[i][k], i, k);
 
 	fclose(out);
 	return 0;
