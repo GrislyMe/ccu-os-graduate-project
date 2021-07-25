@@ -19,7 +19,7 @@ pthread_spinlock_t lock;
 long long int timeCost[16][16] = {0};
 int counter[16][16] = {0};
 int pre_cpu;
-volatile double* globalData;
+double* globalData;
 struct timespec previous;
 
 void thread() {
