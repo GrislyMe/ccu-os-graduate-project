@@ -2,11 +2,11 @@ SHELL = /bin/bash
 CC = gcc
 CFLAGS = -std=c11 -pthread -Wall -O3
 SRC = $(wildcard *.c)
-EXE = $(patsubst %.c, %.o, $(SRC))
+EXE = $(patsubst %.c, %, $(SRC))
 
 all: ${EXE}
 
-%.o: %.c
+%: %.c
 	${CC} ${CFLAGS} $*.c -o $@
 
 clean: ${EXE}
