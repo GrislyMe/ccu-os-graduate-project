@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import os
+import pyimgur
 import numpy as np
 import matplotlib.pyplot as plt
+import webbrowser
 
 core_num = os.cpu_count()
 
@@ -18,8 +20,6 @@ def getTime():
                 count[s][d] += c
     
     return time // count
-
-
 
 def main():
     cpu = list(range(core_num))
@@ -49,11 +49,17 @@ def main():
         for j in range(core_num):
             text = ax.text(j, i, int(time[i, j]),
                            ha="center", va="center", 
-                           color=textcolors[int(norm[i, j] > 0.5)])
+                           color=textcolors[int(norm[i, j] > 0.5)], size=4)
 
     ax.set_title("context switch time")
     fig.tight_layout()
-    plt.show()
+    plt.savefig("/tmp/result.png", dpi=350)
+
+    CLIENT_ID = "2964f9789cd9671"
+    im = pyimgur.Imgur(CLIENT_ID)
+    image = im.upload_image("/tmp/result.png")
+    webbrowser.open(image.link, new=2)
+    print(image.link)
 
 if __name__ == "__main__":
     main()

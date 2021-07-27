@@ -32,17 +32,20 @@ void thread() {
 		pthread_spin_lock(&lock);
 		// critical section
 
+		// load data from last modifyed core or memory
 		for (int i = 0; i < 128; i++)
 			globalData[i] *= 25.242;
 
 		cpu = sched_getcpu();
 		clock_gettime(CLOCK_REALTIME, &current);
 		diff = current.tv_nsec - previous.tv_nsec;
+		// remove some false data
 		if (diff > 0 && diff < 10000) {
 			timeCost[pre_cpu][cpu] += diff;
 			counter[pre_cpu][cpu]++;
 		}
 
+		// reset timer
 		clock_gettime(CLOCK_REALTIME, &current);
 		pre_cpu = cpu;
 		previous = current;
