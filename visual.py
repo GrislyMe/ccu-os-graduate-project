@@ -5,6 +5,7 @@ import pyimgur
 import numpy as np
 import matplotlib.pyplot as plt
 import webbrowser
+import TSP_order
 
 core_num = os.cpu_count()
 
@@ -60,6 +61,9 @@ def main():
     image = im.upload_image("/tmp/result.png")
     webbrowser.open(image.link, new=2)
     print(image.link)
+
+    TSP_order.main(time, 1)
+
 
 if __name__ == "__main__":
     main()

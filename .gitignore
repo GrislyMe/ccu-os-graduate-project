@@ -9,3 +9,4 @@
 result
 *.png
 .vscode
+__pycache__/*
