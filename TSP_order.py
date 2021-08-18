@@ -4,7 +4,7 @@ from ortools.constraint_solver import pywrapcp
 import numpy as np
 
 
-def create_data_model(time: np.array, num_of_vechicles: int):
+def create_data_model(time: np.ndarray, num_of_vechicles: int):
     data = {}
     data['distance_matrix'] = time.tolist()
     data['num_of_vehicles'] = num_of_vechicles
@@ -12,21 +12,21 @@ def create_data_model(time: np.array, num_of_vechicles: int):
     return data
 
 
-def print_solution(manager, routing, solution):
+def result(manager, routing, solution):
     index = routing.Start(0)
     plan_output = 'Route: '
     while not routing.IsEnd(index):
         plan_output += f"{manager.IndexToNode(index)}, "
         index = solution.Value(routing.NextVar(index))
     plan_output += f"{manager.IndexToNode(index)}\n"
-    print(plan_output)
+    return plan_output
 
 
-def main(time: np.array, num_of_vechicles: int):
+def main(time: np.ndarray, num_of_vechicles: int):
     data = create_data_model(time, num_of_vechicles)
 
     manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']),
-                                           data['num_of_vehicles'], data['depot'])
+            data['num_of_vehicles'], data['depot'])
 
     routing = pywrapcp.RoutingModel(manager)
 
@@ -46,8 +46,5 @@ def main(time: np.array, num_of_vechicles: int):
     solution = routing.SolveWithParameters(search_parameters)
 
     if solution:
-        print_solution(manager, routing, solution)
-
-
-if __name__ == '__main__':
-    main()
+        return result(manager, routing, solution)
+    return None

@@ -1,6 +1,6 @@
 SHELL = /bin/bash
 CC = gcc
-CFLAGS = -std=c11 -pthread -Wall -O3
+CFLAGS = -std=gnu11 -pthread -Wall -O3 -latomic
 SRC = $(wildcard *.c)
 EXE = $(patsubst %.c, %, $(SRC))
 
