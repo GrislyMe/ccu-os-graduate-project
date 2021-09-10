@@ -15,103 +15,119 @@
 #include <threads.h>
 #include <unistd.h>
 
-// 0, 3, 5, 6, 2, 4, 7, 1, 9, 14, 10, 13, 15, 8, 11, 12, 0
-int idCov[16] = {3, 9, 4, 5, 7, 6, 2, 1, 11, 14, 13, 12, 0, 15, 10, 8};  // this array should be changed on different CPU
+// 0 -> 4 -> 5 -> 3 -> 2 -> 1 -> 0
+int idCov[6] = {4, 0, 1, 2, 5, 3};  // this array should be changed on different CPU
 thread_local int routingID;
 thread_local int cid;
 volatile atomic_int GlobalLock = 0;
-int zero = 0;
+static int zero = 0;
 int num_of_vcore;
 int num_of_thread;
 
-typedef struct mcs_node {
-	// mcs node contain atomic pointer point to next node
-	_Atomic(struct mcs_node)* next;
-	int routingID;
-} mcs_node;
-// type define a atomic mcs node for better access
-typedef _Atomic(mcs_node) atomic_mcs_node;
+/*
+* Start to debug
+* The bug maybe is caused by the pointer assignment
+*/
 
-atomic_mcs_node waitArray[16];
-atomic_int hasLock[16];
+// the structure of my mcs_lock_node
+typedef struct mcs_lock_node {
+    volatile int waiting;
+    struct mcs_lock_node *next;
+    struct mcs_lock_node *tail;
+    struct mcs_lock_node *head;
+    int cid;
+    int routingID;
+}mcs_lock_node;
 
-int atomic_push_back(atomic_mcs_node* arr, int val) {
-	// due to we are dealing with atomic struct
-	// the access is different
-	// we have to declarate a struct on stack memory
-	// than we can atmoic store it back
-	// current is the one on stack
-	mcs_node current = atomic_load(arr);
-	// tmp is the next node
-	atomic_mcs_node* tmp = malloc(sizeof(mcs_node));
-	atomic_init(tmp, ((mcs_node){.routingID = val, .next = NULL}));
-	current.next = tmp;
-	atomic_store(arr, current);
-	return 1;
-}
+_Atomic volatile mcs_lock_node waitArray[6];
 
-int atomic_pop_front(atomic_mcs_node* head) {
-	// same as push_back function
-	mcs_node current = atomic_load(head);
-	int ret = current.routingID;
-	atomic_store(head, *current.next);
-	return ret;
+void thread_node_init(mcs_lock_node *mcs_node)
+{
+    mcs_node->next = NULL;
+    mcs_node->waiting = 1;
+    mcs_node->cid = sched_getcpu();
+    mcs_node->routingID = idCov[mcs_node->cid];
 }
 
 void spin_init() {
-	// init
-	// still has the cid routingID issue discussed before
-	// in the program use cid
-	cid = sched_getcpu();
-	routingID = idCov[cid];
-	for (int i = 0; i < num_of_vcore; i++) {
-		atomic_init((waitArray + i), ((mcs_node){.routingID = routingID, .next = NULL}));
-		atomic_init((hasLock + i), 0);
-	}
+	routingID = idCov[sched_getcpu()];
+    for(int i = 0; i < num_of_vcore; i++){
+        waitArray[i].next = NULL;
+        waitArray[i].head = NULL;
+        waitArray[i].tail = NULL;
+        waitArray[i].waiting = 0;
+        waitArray[i].cid = -1; waitArray[i].routingID = -1;
+    }
 }
 
-void spin_lock() {
-	// push current thread in mcs list(waitarray)
-	atomic_push_back(waitArray + cid, cid);
-	// hasLock[cid] == 0 -> means don't have the lock
-	// waitarray + cid != NULL -> this list is not empty
-	while (!hasLock[cid] || waitArray + cid != NULL) {
-		zero = 0;
-		if (atomic_compare_exchange_strong(&GlobalLock, &zero, 1)) {
-			printf("enter by first\n");
-			atomic_push_back(waitArray + cid, routingID);
-			atomic_store((hasLock + cid), 1);
-			return;
-		}
-	}
-	atomic_push_back((waitArray + cid), routingID);
-	atomic_store((hasLock + cid), 1);
-	return;
+void atomic_append(mcs_lock_node* mcs_node){
+    // atomic insert into the waitArray[mcs_node->cid]
+   
+    // If there is no thread waiting in the waitArray[coreOfThread]
+    // Then assign the current mcs_node to this waitArray's head and tail
+    // Otherwise, we assign the current mcs_node to the next of tail
+    if(atomic_load_explicit(&waitArray[mcs_node->cid], memory_order_acquire).head == NULL){
+        atomic_store_explicit(&waitArray[mcs_node->cid].waiting, 1, memory_order_relaxed);
+        atomic_store_explicit(&waitArray[mcs_node->cid].head, mcs_node, memory_order_relaxed);
+        atomic_store_explicit(&waitArray[mcs_node->cid].tail, mcs_node, memory_order_release);
+    }
+    else{
+        atomic_store_explicit(&waitArray[mcs_node->cid].tail->next, mcs_node, memory_order_relaxed);
+        atomic_store_explicit(&waitArray[mcs_node->cid].tail, mcs_node, memory_order_release);
+    }
 }
 
-void spin_unlock() {
-	// if the routingID(the destination vcore) have waiting thread
-	if (waitArray + routingID) {
-		atomic_pop_front(waitArray + cid);
-		atomic_store(hasLock + cid, 0);
-		atomic_store(hasLock + routingID, 1);
-		printf("parse lock to %d\n", routingID);
-	} else {
-		atomic_store(&GlobalLock, 0);
-		printf("unlock and reset\n");
-	}
+void spin_lock(mcs_lock_node* mcs_node) {
+    // atomic_append(mcs_node, SoA_array[routingID]);
+    atomic_append(mcs_node);
+
+    while(1){
+        zero = 0; // let the variable "zero" always contain the value '0'
+        if(mcs_node->waiting == 0)
+            return;
+        if(atomic_compare_exchange_strong(&GlobalLock, &zero, 1)){
+            mcs_node->waiting = 0;
+            return;
+        }
+    }
+}
+
+void spin_unlock(mcs_lock_node* mcs_node) {
+	// replace the current waitArray's head to its next one
+    // if there is no more thread in the core
+    // set the "waiting" value to zero
+    waitArray[mcs_node->cid].head = waitArray[mcs_node->cid].head->next;
+    if(waitArray[mcs_node->cid].head == NULL){
+        waitArray[mcs_node->cid].tail = NULL;
+        waitArray[mcs_node->cid].waiting = 0;
+    }
+
+	for(int i = 0; i < num_of_vcore - 1; i++){
+        if(waitArray[(i + mcs_node->routingID) % num_of_vcore].waiting == 1){
+            if(waitArray[(i + mcs_node->routingID) % num_of_vcore].head != NULL){
+                // let the next thread entering the CS
+                waitArray[(i + mcs_node->routingID) % num_of_vcore].head->waiting = 0;
+            }
+            return;
+        }
+    }
+    GlobalLock = 0;
 }
 
 void thread() {
-	cid = sched_getcpu();
-	routingID = idCov[cid];
-	// printf("cid = %d\nroutingID = %d\n", cid, routingID);
+    // set all the information that will be used later
+	mcs_lock_node *mcs_node = (mcs_lock_node*)malloc(sizeof(mcs_lock_node));
+    thread_node_init(mcs_node);
 
-	spin_lock();
-	printf("routingID : %d(cid : %d) has CS\n", routingID, cid);
-	sleep(1);
-	printf("routingID : %d(cid : %d) unlock\n", routingID, cid);
-	spin_unlock();
+	spin_lock(mcs_node); // lock
+
+    // CS
+    printf("routingID : %d(cid : %d) has CS, waiting:%d\n", mcs_node->routingID, mcs_node->cid, mcs_node->waiting);
+    sleep(0);
+    printf("routingID : %d(cid : %d) unlock\n", mcs_node->routingID, mcs_node->cid);
+    // CS
+
+    spin_unlock(mcs_node); // unlock
 }
 
 int main() {
