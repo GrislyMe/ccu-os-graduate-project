@@ -13,7 +13,6 @@
 #include <unistd.h>
 
 #define num_of_vcore 16
-#define diff local_time.tv_sec - local_start.tv_sec
 
 atomic_int lock = 0;
 int counter[100][num_of_vcore] = {0};
@@ -37,10 +36,11 @@ void spin_unlock() {
 int thread() {
 	// set all the information that will be used later
 	int cpu;
-	struct timespec local_start;
-	struct timespec local_time;
-	clock_gettime(CLOCK_REALTIME, &local_start);
-	clock_gettime(CLOCK_REALTIME, &local_time);
+	struct timespec start;
+	struct timespec current;
+	clock_gettime(CLOCK_REALTIME, &start);
+	clock_gettime(CLOCK_REALTIME, &current);
+	int diff = current.tv_sec - start.tv_sec;
 
 	while (diff < 100) {
 		spin_lock();  // lock
@@ -49,7 +49,8 @@ int thread() {
 		counter[diff][cpu]++;
 		// CS
 		spin_unlock();  // unlock
-		clock_gettime(CLOCK_REALTIME, &local_time);
+		clock_gettime(CLOCK_REALTIME, &current);
+		diff = current.tv_sec - start.tv_sec;
 	}
 	// clock_gettime(CLOCK_THREAD_CPUTIME_ID, &thread_time[*id]);
 	return 0;
@@ -73,9 +74,9 @@ int main() {
 		pthread_join(tid[i], NULL);
 
 	// pthread_spin_destroy(&lock);
-	FILE* out = fopen("cost", "w");
+	FILE* out = fopen("plock_cost", "w");
 	if (!out) {
-		printf("fail to open");
+		printf("fail to open file\n");
 		return 0;
 	}
 	for (int i = 0; i < 100; i++) {
