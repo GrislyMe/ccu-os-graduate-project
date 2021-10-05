@@ -18,9 +18,9 @@ int num_of_vcore;
 int num_of_thread;
 // the structure of my mcs_lock_node
 typedef struct mcs_node {
-	struct mcs_node* next;
-	int tid;
-	int lock;
+	_Atomic struct mcs_node* next;
+	atomic_int tid;
+	atomic_int lock;
 } mcs_node;
 mcs_node* tail = NULL;
 // mcs_node* head = NULL;
@@ -48,14 +48,15 @@ _Atomic int progress = 0;
 
 void spin_lock(mcs_node* node) {
 	empty = NULL;
-	if (atomic_compare_exchange_strong(&tail, &empty, node) == 1) {
+	if (atomic_compare_exchange_strong_explicit(&tail, &empty, node, memory_order_relaxed, memory_order_acq_rel) == 1) {
 		printf("%d just get the tail\n", node->tid);
 		return;
 	} else {
 		node->lock = 1;
-		atomic_thread_fence(memory_order_release);
-		atomic_store_explicit(&tail->next, node, memory_order_relaxed);
-		atomic_store_explicit(&tail, tail->next, memory_order_seq_cst);
+		atomic_load_explicit(&tail->next, memory_order_acquire);
+		printf("%d --->>> %d\n", tail->tid, node->tid);
+		atomic_store_explicit(&tail->next, (_Atomic mcs_node*)node, memory_order_relaxed);
+		atomic_store_explicit(&tail, node, memory_order_release);
 		// empty = NULL;
 		// atomic_store_explicit(&node->next, empty, memory_order_release);
 		// waiting get lock
@@ -96,8 +97,9 @@ void thread() {
 	mcs_node* node = malloc(sizeof(mcs_node));
 	node->lock = 0;
 	empty = NULL;
-	node->next = empty;
-	node->tid = gettid();
+	atomic_init(&node->next, empty);
+	atomic_store(&node->tid, gettid());
+	// node->tid = gettid();
 	atomic_thread_fence(memory_order_release);
 	spin_lock(node);  // lock
 	// CS
