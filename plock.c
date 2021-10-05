@@ -16,6 +16,7 @@
 
 atomic_int lock = 0;
 int counter[100][num_of_vcore] = {0};
+int globalData[300];
 struct timespec thread_time[64];
 
 void spin_init() {
@@ -47,6 +48,9 @@ int thread() {
 		// CS
 		cpu = sched_getcpu();
 		counter[diff][cpu]++;
+		for (int i = 0; i < 300; i++) {
+			globalData[i] += i;
+		}
 		// CS
 		spin_unlock();  // unlock
 		clock_gettime(CLOCK_REALTIME, &current);
