@@ -23,78 +23,93 @@ typedef struct mcs_node {
 	int lock;
 } mcs_node;
 mcs_node* tail = NULL;
-mcs_node* head = NULL;
+// mcs_node* head = NULL;
+mcs_node* empty = NULL;
 _Atomic int progress = 0;
 
-bool atomic_append(mcs_node* node) {
-	if (atomic_load(&head) == NULL) {
-		atomic_store(&head, node);
-		atomic_store(&tail, node);
-		atomic_store(&node->lock, 0);
-		// head = node;
-		// tail = node;
-		// node->lock = 0;
-		atomic_thread_fence(memory_order_release);
-		printf("id:%d, take the head\n", node->tid);
-		return true;
-	} else {
-		atomic_store_explicit(&tail->next, node, memory_order_seq_cst);
-		atomic_store_explicit(&tail, node, memory_order_relaxed);
-		// tail->next = node;
-		// tail = node;
-		printf("id:%d, append\n", node->tid);
-		atomic_thread_fence(memory_order_release);
-		return false;
-	}
-}
+/*bool atomic_append(mcs_node* node) {
+    if (atomic_load(&head) == NULL) {
+        atomic_store(&head, node);
+        atomic_store(&tail, node);
+        atomic_store(&node->lock, 0);
+        atomic_thread_fence(memory_order_release);
+        printf("id:%d, take the head\n", node->tid);
+        return true;
+    } else {
+        atomic_store_explicit(&tail->next, node, memory_order_seq_cst);
+        atomic_store_explicit(&tail, node, memory_order_relaxed);
+        // tail->next = node;
+        // tail = node;
+        printf("id:%d, append\n", node->tid);
+        atomic_thread_fence(memory_order_release);
+        return false;
+    }
+}*/
 
-void spin_lock(int tid) {
-	mcs_node* node = malloc(sizeof(mcs_node));
-	node->lock = 1;
-	node->next = NULL;
-	node->tid = tid;
-	atomic_thread_fence(memory_order_acquire);
-	if (atomic_append(node)) {
+void spin_lock(mcs_node* node) {
+	empty = NULL;
+	if (atomic_compare_exchange_strong(&tail, &empty, node) == 1) {
+		printf("%d just get the tail\n", node->tid);
 		return;
-	}
-
-	while (node->lock != 0) {
-		if (head == NULL) {
-			printf("id:%d, head is missing in LS\n", node->tid);
-			scanf("%d", &progress);
+	} else {
+		node->lock = 1;
+		atomic_thread_fence(memory_order_release);
+		atomic_store_explicit(&tail->next, node, memory_order_relaxed);
+		atomic_store_explicit(&tail, tail->next, memory_order_seq_cst);
+		// empty = NULL;
+		// atomic_store_explicit(&node->next, empty, memory_order_release);
+		// waiting get lock
+		int times = 0;
+		while (node->lock != 0) {
+			if (times++ > 9999999) {
+				printf("%d lost in LS\n", node->tid);
+				scanf("%d", &progress);
+			}
+			asm("pause");
 		}
-		sleep(0);
 	}
 }
 
-void spin_unlock() {
+void spin_unlock(mcs_node* node) {
 	mcs_node* successor;
-	successor = head->next;
-	if (successor == NULL) {
-		if (head == tail) {
-			free(head);
-			head = NULL;
+	successor = node->next;
+	empty = NULL;
+	if (successor == empty) {
+		if (atomic_compare_exchange_strong(&tail, &empty, node) == 1) {
+			printf("%d drop the lock\n", node->tid);
 			return;
 		}
-		while (!(successor = head->next)) {
-			printf("waiting head->next exist\n");
-			sleep(0);
+	}
+	empty = NULL;
+	int test = 0;
+	while (successor == empty) {
+		if (test++ > 9999999) {
+			printf("%d don't care safety, just gone.\n", node->tid);
+			return;
 		}
 	}
-	printf("id:%d, got the lock\n", successor->tid);
-	atomic_store(&successor->lock, 0);
+	// printf("%d pass lock to %d\n", node->tid, successor->tid);
+	successor->lock = 0;
 }
 void thread() {
-	spin_lock(gettid());  // lock
+	atomic_thread_fence(memory_order_acquire);
+	mcs_node* node = malloc(sizeof(mcs_node));
+	node->lock = 0;
+	empty = NULL;
+	node->next = empty;
+	node->tid = gettid();
+	atomic_thread_fence(memory_order_release);
+	spin_lock(node);  // lock
 	// CS
 	if (progress != 0) {
 		printf("//////////////////progress fail\n");
 	}
 	atomic_fetch_add(&progress, 1);
 	atomic_fetch_add(&progress, -1);
-	// usleep(100);
+	usleep(100);
 	// CS
-	spin_unlock();  // unlock
+	spin_unlock(node);  // unlock
+	free(node);
 }
 
 int main() {
