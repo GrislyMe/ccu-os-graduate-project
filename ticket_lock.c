@@ -8,7 +8,7 @@
 #include <threads.h>
 #include <unistd.h>
 
-#define num_of_vcore 16
+#define num_of_vcore 6
 
 atomic_ulong gtk = 0;
 unsigned long srv = 0;

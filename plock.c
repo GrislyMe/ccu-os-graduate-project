@@ -12,7 +12,7 @@
 #include <sys/sysinfo.h>
 #include <unistd.h>
 
-#define num_of_vcore 16
+#define num_of_vcore 6
 
 atomic_int lock = 0;
 int counter[100][num_of_vcore] = {0};
