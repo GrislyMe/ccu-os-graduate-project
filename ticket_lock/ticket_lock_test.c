@@ -1,29 +1,14 @@
 #define _GNU_SOURCE
+#include "../lib/lock.h"
 #include <pthread.h>
 #include <stdatomic.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <threads.h>
-#include <unistd.h>
 
-#define num_of_vcore 6
+#define num_of_vcore 16
 
-atomic_ulong gtk = 0;
-unsigned long srv = 0;
 int counter[100][num_of_vcore] = {0};
 int globalData[300];
-
-void ticket_lock() {
-	unsigned long ltk = atomic_fetch_add(&gtk, 1);
-	while (ltk != srv)
-		asm("pause");
-}
-
-void ticket_unlock() {
-	srv++;
-}
 
 void thread() {
 	int cpu;

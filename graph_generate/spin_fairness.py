@@ -25,21 +25,21 @@ def main():
 
     fig, ax = plt.subplots(1, 3)
 
-    ax[0].imshow(getCost("plock_cost"), label = "plock")
+    ax[0].imshow(getCost("../plock/plock_cost"), label = "plock")
     ax[0].tick_params(labelleft=False, labelright=False,
                    labeltop=False, labelbottom=False,
                    left=False, right=False,
                    top=False, bottom=False)
     ax[0].set_title("Plock")
 
-    ax[1].imshow(getCost("ticket_cost"))
+    ax[1].imshow(getCost("../ticket_lock/ticket_cost"))
     ax[1].tick_params(labelleft=False, labelright=False,
                    labeltop=False, labelbottom=False,
                    left=False, right=False,
                    top=False, bottom=False)
     ax[1].set_title("Ticket Lock")
 
-    ax[2].imshow(getCost("ticket_cost"))
+    ax[2].imshow(getCost("../mcs/MCS_cost"))
     ax[2].tick_params(labelleft=False, labelright=False,
                    labeltop=False, labelbottom=False,
                    left=False, right=False,
