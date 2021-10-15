@@ -1,8 +1,9 @@
 #define _GNU_SOURCE
-#include "../lib/lock.h"
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "../lib/lock.h"
 // normal define
 #define num_of_vcore 6
 
@@ -20,7 +21,7 @@ void thread() {
 	clock_gettime(CLOCK_REALTIME, &start);
 	clock_gettime(CLOCK_REALTIME, &current);
 	int diff = current.tv_sec - start.tv_sec;
-	while (diff < 100) {
+    while (diff < 10) {
 		spin_lock(node);  // lock
 		// CS
 		cpu = sched_getcpu();

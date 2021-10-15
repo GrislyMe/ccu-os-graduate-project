@@ -1,18 +1,18 @@
 #define _GNU_SOURCE
-#include "../lib/lock.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "../lib/lock.h"
 // normal define
 #define num_of_vcore 6
+
 int RS_size, nowRS;
-int RS_list[10];
+int RS_list[10] = {160000, 120000, 80000, 40000, 20000, 10000, 5000, 1000, 500, 100};
 int num_of_thread;
 long long int counter[10][num_of_vcore] = {0};
 int globalData[300];
 struct timespec thread_time[64];
 
-// mcs define
 void thread() {
 	mcs_node* node = malloc(sizeof(mcs_node));
 	int cpu;
@@ -22,7 +22,8 @@ void thread() {
 	clock_gettime(CLOCK_REALTIME, &start);
 	clock_gettime(CLOCK_REALTIME, &current);
 	int diff = current.tv_sec - start.tv_sec;
-	while (diff < 100) {
+    printf("while begin\n");
+	while (diff < 10) {
 		spin_lock(node);  // lock
 		
 		// CS
@@ -36,13 +37,15 @@ void thread() {
 		clock_gettime(CLOCK_REALTIME, &t);
 		while(1){
 			clock_gettime(CLOCK_REALTIME, &current);
-			if(current - t > RS_size){
+			if(current.tv_sec - t.tv_sec > RS_size){
 				break;
 			}
 		}
 		clock_gettime(CLOCK_REALTIME, &current);
 		diff = current.tv_sec - start.tv_sec;
+        printf("while end\n");
 	}
+    printf("thread end\n");
 	free(node);
 	return;
 }
@@ -50,7 +53,6 @@ void thread() {
 int main() {
 	// init
 	num_of_thread = num_of_vcore;
-	RS_list = {160000, 120000, 80000, 40000, 20000, 10000, 5000, 1000, 500, 100};
 	for(int T=0;T<10;T++){
 		nowRS = T;
 		RS_size = RS_list[nowRS];
@@ -63,6 +65,7 @@ int main() {
 		for (int i = 0; i < num_of_thread; i++)
 			pthread_join(tid[i], NULL);
 		free(tail);
+        printf("#%dDone\n", T);
 	}
 	// printf("lock is all done\n");
 	// lock program is done, print out result
@@ -79,7 +82,7 @@ int main() {
 			total += counter[T][k];
 			//fprintf(out, "%d ", counter[k]);
 		}
-		fprintf(out, "%d\n", total);
+		fprintf(out, "%lld\n", total);
 	}
 	fclose(out);
 	return 0;
