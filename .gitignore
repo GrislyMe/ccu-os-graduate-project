@@ -4,6 +4,7 @@
 !*.*
 # Unignore all dirs
 !*/
+!makefile
 
 *.o
 result
