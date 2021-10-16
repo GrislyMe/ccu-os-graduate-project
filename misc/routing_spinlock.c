@@ -18,14 +18,16 @@
 #define RS_size 100
 #define num_of_vcore 6
 
-// 0 -> 4 -> 5 -> 3 -> 2 -> 1 -> 0
-int idCov[6] = {4, 0, 1, 2, 5, 3};  // this array should be changed on different CPU
+// 2 -> 1 -> 0 -> 4 -> 5 -> 3
+// ---------->    <----------
+//  same ccx        same ccx
+int idCov[6] = {2, 0, 1, 5, 3, 4};  // this array should be changed on different CPU
 int rs_set[] = {160000, 120000, 80000, 40000, 20000, 10000, 5000, 1000, 500, 100};
 thread_local int routingID;
 atomic_int GlobalLock = 0;
 static int zero = 0;
 long long int counter;
-int globalData[300];
+int globalData[300] = {0};
 
 atomic_int waitArray[6];
 
@@ -54,7 +56,7 @@ void spin_lock(int routingID) {
 }
 
 void spin_unlock(int routingID) {	
-	for(int i = 0; i < num_of_vcore - 1; i++){
+	for(int i = 1; i < num_of_vcore - 1; i++){
         if(waitArray[(i + routingID) % num_of_vcore] == 1){
             waitArray[(i + routingID) % num_of_vcore] = 0;
             return;
@@ -79,16 +81,14 @@ void thread(void* args) {
     int diff;
     int rs = rs_set[rsID];
 
-    printf("rs: %d\n", rs);
-    printf("%d\n", cid);
     clock_gettime(CLOCK_REALTIME, &start);
     clock_gettime(CLOCK_REALTIME, &current);
     diff = current.tv_sec - start.tv_sec;
     while(diff < 10){
         spin_lock(routingID); // lock
         //CS
-        for(int i = 0; i < 300; i++)
-            globalData[i] += i;
+        for(int i = 0; i < 48; i++)
+            globalData[i]  = globalData[i] + 1;
         counter++;
         //CS
         spin_unlock(routingID); // unlock
