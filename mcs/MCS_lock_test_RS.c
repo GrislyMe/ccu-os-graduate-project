@@ -40,15 +40,8 @@ void thread() {
 		// CS
 		spin_unlock(node);  // unlock
 		clock_gettime(CLOCK_REALTIME, &t);
-		while(1){
-			clock_gettime(CLOCK_REALTIME, &current);
-			if(current.tv_nsec - t.tv_nsec > RS_size){
-				break;
-			}
-			if(current.tv_nsec - t.tv_nsec < 0){
-				////I don't know why but it really happend
-				break;
-			}
+		while(clock_gettime(CLOCK_REALTIME, &current) && (current.tv_nsec - t.tv_nsec ) < RS_size){
+			//doing nothing
 		}
 		clock_gettime(CLOCK_REALTIME, &current);
 		diff = current.tv_sec - start.tv_sec;
