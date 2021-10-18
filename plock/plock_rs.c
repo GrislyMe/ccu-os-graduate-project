@@ -31,8 +31,8 @@ int thread(long rs) {
 		// CS
 		spin_unlock();  // unlock
 		clock_gettime(CLOCK_REALTIME, &rs_start);
-		while (clock_gettime(CLOCK_REALTIME, &rs_end) && (rs_end.tv_nsec - rs_start.tv_nsec) < rs) {
-		}
+		while (clock_gettime(CLOCK_REALTIME, &rs_end) && (rs_end.tv_nsec - rs_start.tv_nsec) < rs)
+			;
 		clock_gettime(CLOCK_REALTIME, &current);
 		diff = current.tv_sec - start.tv_sec;
 	}
@@ -45,8 +45,8 @@ int main() {
 	int num_of_thread = num_of_vcore;
 	int rs_set[] = {160000, 120000, 80000, 40000, 20000, 10000, 5000, 1000, 500, 100};
 	spin_init();
-	for (int i = 0; i < 10; i++) {
-		printf("%d\n", rs_set[i]);
+	for (int k = 0; k < 10; k++) {
+		printf("%d\n", rs_set[k]);
 		pthread_t* tid = (pthread_t*)malloc(sizeof(pthread_t) * num_of_thread);
 
 		for (int i = 0; i < num_of_thread; i++) {
@@ -61,7 +61,8 @@ int main() {
 			printf("fail to open file\n");
 			return 0;
 		}
-		fprintf(out, "%d %lld\n", rs_set[i], counter);
+		fprintf(out, "%d %lld\n", rs_set[k], counter);
+		counter = 0;
 		fclose(out);
 	}
 	return 0;

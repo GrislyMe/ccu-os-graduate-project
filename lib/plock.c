@@ -10,6 +10,7 @@ void spin_lock() {
 	int zero = 0;
 	while (atomic_compare_exchange_strong(&lock, &zero, 1)) {
 		zero = 0;
+		asm("pause");
 	}
 }
 
