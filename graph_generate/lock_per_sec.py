@@ -6,11 +6,12 @@ import matplotlib.pyplot as plt
 import webbrowser
 
 def getCost(file_name: str):
-    ret = []
+    ret = [0] * 10
+    idx = 0
     with open(file_name, "r") as inputFile:
-        for line in inputFile.readlines():
-            ret += [int(line.split()[1]) / 10]
-    return ret
+        for idx, line in enumerate(inputFile.readlines()):
+            ret[idx % 10] += int(line.split()[1])
+    return [item / idx for item in ret]
 
 def main():
     upload = False
@@ -19,7 +20,7 @@ def main():
         print("failed to get vcore_number")
         return
 
-    x = ["160K", "120K", "80K", "40K", "20K", "10K", "5K", "1K", "0.5K", "0.1K"]
+    x = ["160k", "120k", "80k", "40k", "20k", "10k", "5k", "1k", "0.5k", "0.1k"]
     xi = list(range(len(x)))
     y = getCost("../plock/plock_lps")
     line = plt.plot(xi, y, label = "plock")
@@ -33,11 +34,14 @@ def main():
     line = plt.plot(xi, y, label = "Soa_spinlock")
     plt.setp(line, marker = "s")
 
+    y = getCost("../mcs/mcs_lps")
+    line = plt.plot(xi, y, label = "mcs_spinlock")
+    plt.setp(line, marker = "x")
+
     plt.title("Lock Per Sec")
     plt.xticks(xi, x)
     plt.xlabel("rs_size")
     plt.ylabel("Lock Per Second")
-
     plt.grid(True)
     plt.legend()
     plt.show()

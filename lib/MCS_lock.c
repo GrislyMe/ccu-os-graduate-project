@@ -1,8 +1,15 @@
 #define _GNU_SOURCE
 #include "lock.h"
 #include <stdbool.h>
+#include <stdlib.h>
 
 _Atomic struct mcs_node* tail;
+
+void spin_init() {
+	tail = malloc(sizeof(mcs_node));
+	atomic_init(&tail, mcs_null);
+}
+
 void spin_lock(mcs_node* node) {
 	atomic_init(&node->next, mcs_null);
 	mcs_node* prev = atomic_exchange_explicit(&tail, node, memory_order_acq_rel);

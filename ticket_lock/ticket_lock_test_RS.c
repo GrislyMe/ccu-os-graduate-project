@@ -7,7 +7,7 @@
 
 #define num_of_vcore 16
 
-long long int counter;
+atomic_llong counter;
 int globalData[300];
 
 void thread(long rs) {
@@ -21,11 +21,11 @@ void thread(long rs) {
 
 	while (diff < 10) {
 		ticket_lock();  // lock
-		                // CS
+		// CS
 		for (int i = 0; i < 300; i++) {
 			globalData[i] += i;
 		}
-		counter++;
+		atomic_fetch_add(&counter, 1);
 		// CS
 		ticket_unlock();  // unlock
 		clock_gettime(CLOCK_REALTIME, &current);

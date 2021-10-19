@@ -1,11 +1,11 @@
 #define _GNU_SOURCE
 
+#include "../lib/lock.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../lib/lock.h"
 // normal define
-#define num_of_vcore 6
+#define num_of_vcore 16
 
 int num_of_thread;
 int counter[100][num_of_vcore] = {0};
@@ -21,7 +21,7 @@ void thread() {
 	clock_gettime(CLOCK_REALTIME, &start);
 	clock_gettime(CLOCK_REALTIME, &current);
 	int diff = current.tv_sec - start.tv_sec;
-    while (diff < 10) {
+	while (diff < 10) {
 		spin_lock(node);  // lock
 		// CS
 		cpu = sched_getcpu();
@@ -41,6 +41,7 @@ void thread() {
 int main() {
 	// init
 	num_of_thread = num_of_vcore;
+	spin_init();
 	// create and join thread
 	pthread_t* tid = (pthread_t*)malloc(sizeof(pthread_t) * num_of_thread);
 	for (int i = 0; i < num_of_thread; i++) {
@@ -50,7 +51,6 @@ int main() {
 	for (int i = 0; i < num_of_thread; i++)
 		pthread_join(tid[i], NULL);
 
-	free(tail);
 	printf("lock is all done\n");
 	// lock program is done, print out result
 

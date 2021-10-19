@@ -24,10 +24,10 @@ int thread(long rs) {
 	while (diff < 10) {
 		spin_lock();  // lock
 		// CS
-		counter++;
 		for (int i = 0; i < 300; i++) {
 			globalData[i] += i;
 		}
+		counter++;
 		// CS
 		spin_unlock();  // unlock
 		clock_gettime(CLOCK_REALTIME, &rs_start);
