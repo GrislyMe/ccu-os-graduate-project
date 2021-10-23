@@ -1,5 +1,7 @@
 #include "lock.h"
 #define _GNU_SOURCE
+#include <sched.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <threads.h>
 
@@ -9,8 +11,10 @@
 int* _idCov;  // this array should be changed on different CPU
 int vcore;
 int zero = 0;
-atomic_int lock = 0;
+long long int cnt = 0;
+thread_local int routingID;
 
+atomic_int lock = 0;
 atomic_int* waitArray;
 
 void soa_spin_init(int num_of_vcore, int* tsp_order) {
@@ -23,7 +27,8 @@ void soa_spin_init(int num_of_vcore, int* tsp_order) {
 	}
 }
 
-void spin_lock(int routingID) {
+void spin_lock() {
+	routingID = _idCov[sched_getcpu()];
 	waitArray[routingID] = 1;
 	while (1) {
 		zero = 0;  // let the variable "zero" always contain the value '0'
@@ -36,7 +41,7 @@ void spin_lock(int routingID) {
 	}
 }
 
-void spin_unlock(int routingID) {
+void spin_unlock() {
 	for (int i = 1; i < vcore - 1; i++) {
 		if (waitArray[(i + routingID) % vcore] == 1) {
 			waitArray[(i + routingID) % vcore] = 0;

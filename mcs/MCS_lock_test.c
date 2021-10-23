@@ -21,7 +21,7 @@ void thread() {
 	clock_gettime(CLOCK_REALTIME, &start);
 	clock_gettime(CLOCK_REALTIME, &current);
 	int diff = current.tv_sec - start.tv_sec;
-	while (diff < 10) {
+	while (diff < 100) {
 		spin_lock(node);  // lock
 		// CS
 		cpu = sched_getcpu();

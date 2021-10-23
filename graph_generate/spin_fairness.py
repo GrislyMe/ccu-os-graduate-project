@@ -15,7 +15,7 @@ def getCost(file_name: str):
     return np.array([np.sum(np.array(ret)[i - merge: i], axis=0) for i in range(merge, 100, merge)])
 
 def main():
-    upload = False
+    upload = True
     core_num = os.cpu_count()
     if not core_num:
         print("failed to get vcore_number")
@@ -47,7 +47,7 @@ def main():
     ax[2].set_title("MCS Lock")
 
     fig.suptitle('Fairness Test',fontsize=16) 
-    plt.show()
+    fig.tight_layout()
 
     if upload:
         plt.savefig("/tmp/result.png", dpi=350)
@@ -56,6 +56,8 @@ def main():
         image = im.upload_image("/tmp/result.png")
         webbrowser.open(image.link, new=2)
         print(image.link)
+    else:
+        plt.show()
 
 if __name__ == "__main__":
     main()
