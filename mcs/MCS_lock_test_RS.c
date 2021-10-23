@@ -10,16 +10,19 @@ int rs_list[10] = {160000, 120000, 80000, 40000, 20000, 10000, 5000, 1000, 500, 
 int num_of_thread;
 atomic_llong counter;
 int globalData[300];
+struct timespec start;
 
 void thread(int rs_size) {
 	mcs_node* node = malloc(sizeof(mcs_node));
-	struct timespec start;
 	struct timespec current;
+    struct timespec rs_start;
 	struct timespec t;
-	clock_gettime(CLOCK_REALTIME, &start);
-	clock_gettime(CLOCK_REALTIME, &current);
-	int diff = current.tv_sec - start.tv_sec;
-	while (diff < 10) {
+	
+    while (1) {
+        clock_gettime(CLOCK_MONOTONIC, &current);
+        if(time_diff(start, current).tv_sec > 10)
+            break;
+
 		spin_lock(node);
 		// lock
 		// CS
@@ -30,11 +33,13 @@ void thread(int rs_size) {
 		// CS
 		spin_unlock(node);
 		// unlock
-		clock_gettime(CLOCK_REALTIME, &t);
-		while (clock_gettime(CLOCK_REALTIME, &current) && (current.tv_nsec - t.tv_nsec) < rs_size)
-			;
-		clock_gettime(CLOCK_REALTIME, &current);
-		diff = current.tv_sec - start.tv_sec;
+        
+		clock_gettime(CLOCK_MONOTONIC, &rs_start);
+        while(1){
+            clock_gettime(CLOCK_MONOTONIC, &t);
+            if(time_diff(rs_start, t).tv_nsec > rs_size)
+                break;
+        }
 	}
 	free(node);
 	return;
@@ -52,6 +57,7 @@ int main() {
 			pthread_create(&tid[i], NULL, (void*)thread, (void*)rs_list[t]);
 		}
 
+        clock_gettime(CLOCK_MONOTONIC, &start);
 		for (int i = 0; i < num_of_thread; i++)
 			pthread_join(tid[i], NULL);
 		FILE* out = fopen("mcs_lps", "a");

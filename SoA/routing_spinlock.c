@@ -33,7 +33,7 @@ void thread(info* args) {
 	int rs = rs_set[rsID];
 
 	while (1) {
-        clock_gettime(CLOCK_REALTIME, &current);
+        clock_gettime(CLOCK_MONOTONIC, &current);
         if(time_diff(start, current).tv_sec > 10)
             break;
 
@@ -45,9 +45,9 @@ void thread(info* args) {
 		// CS
 		spin_unlock();  // unlock
 
-		clock_gettime(CLOCK_REALTIME, &rs_start);
+		clock_gettime(CLOCK_MONOTONIC, &rs_start);
 	    while(1){
-            clock_gettime(CLOCK_REALTIME, &rs_end);
+            clock_gettime(CLOCK_MONOTONIC, &rs_end);
             if(time_diff(rs_start, rs_end).tv_nsec > rs)
                 break;
         }
@@ -75,7 +75,7 @@ int main() {
 			pthread_create(&tid[i], NULL, (void*)thread, &args[i]);
 		}
 
-        clock_gettime(CLOCK_REALTIME, &start);
+        clock_gettime(CLOCK_MONOTONIC, &start);
 		// pthread_spin_unlock(&lock);
 		for (int i = 0; i < num_of_thread; i++)
 			pthread_join(tid[i], NULL);
