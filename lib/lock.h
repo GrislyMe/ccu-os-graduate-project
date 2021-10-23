@@ -1,5 +1,6 @@
 #include <stdatomic.h>
 #include <stddef.h>
+#include <time.h>
 
 #define mcs_null (struct mcs_node*)NULL
 
@@ -18,6 +19,8 @@ typedef struct info {
 // extern atomic_ulong gtk;
 // extern unsigned long srv;
 // extern _Atomic struct mcs_node* tail;
+
+struct timespec time_diff(struct timespec start, struct timespec end);
 
 void spin_init();
 void soa_spin_init(int num_of_vcore, int* tsp_order);
