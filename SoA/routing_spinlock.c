@@ -21,6 +21,7 @@ void thread(info* args) {
 	int cid = args->cid;
 	int rs_size = args->rs_size;
 
+	// assign each thread to use one vcore only
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
 	CPU_SET(cid, &cpuset);
@@ -29,10 +30,13 @@ void thread(info* args) {
 	struct timespec start;
 	struct timespec current;
 	struct timespec rs_start;
+	// thread start time
 	clock_gettime(CLOCK_MONOTONIC, &start);
+	// init current time
 	clock_gettime(CLOCK_MONOTONIC, &current);
 
 	while (1) {
+		// we count lock that was aquired during ten sec
 		if (time_diff(start, current).tv_sec > 10)
 			break;
 
@@ -45,6 +49,7 @@ void thread(info* args) {
 		spin_unlock();  // unlock
 
 		clock_gettime(CLOCK_MONOTONIC, &rs_start);
+		// rs
 		while (1) {
 			clock_gettime(CLOCK_MONOTONIC, &current);
 			if (time_diff(rs_start, current).tv_nsec > rs_size)
@@ -57,6 +62,7 @@ int main() {
 	// init
 	int num_of_thread = num_of_vcore;
 	info args[num_of_vcore];
+	// thread id init
 	for (int i = 0; i < num_of_vcore; i++) {
 		args[i].cid = i;
 	}
@@ -70,6 +76,7 @@ int main() {
 
 		// pthread_spin_lock(&lock);
 		for (int i = 0; i < num_of_thread; i++) {
+			// parse size and thread id
 			args[i].rs_size = rs_set[j];
 			pthread_create(&tid[i], NULL, (void*)thread, &args[i]);
 		}

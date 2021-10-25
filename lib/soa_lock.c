@@ -11,14 +11,15 @@
 int* _idCov;  // this array should be changed on different CPU
 int vcore;
 int zero = 0;
-long long int cnt = 0;
 thread_local int routingID;
 
 atomic_int lock = 0;
 atomic_int* waitArray;
 
 void soa_spin_init(int num_of_vcore, int* tsp_order) {
+	// set vcore number
 	vcore = num_of_vcore;
+	// init waitArray and idCov
 	waitArray = malloc(sizeof(int) * vcore);
 	_idCov = malloc(sizeof(int) * vcore);
 	for (int i = 0; i < num_of_vcore; i++) {
@@ -28,11 +29,13 @@ void soa_spin_init(int num_of_vcore, int* tsp_order) {
 }
 
 void spin_lock() {
+	// init routingID
 	routingID = _idCov[sched_getcpu()];
 	waitArray[routingID] = 1;
 	while (1) {
-		// asm("pause");
-		zero = 0;  // let the variable "zero" always contain the value '0'
+		zero = 0;
+		// let the variable "zero" always contain the value '0'
+		// cause compare_exchange will also modify zero when compare is failed
 		if (waitArray[routingID] == 0)
 			return;
 		if (atomic_compare_exchange_strong(&lock, &zero, 1)) {
