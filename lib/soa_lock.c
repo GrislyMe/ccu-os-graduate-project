@@ -9,6 +9,7 @@
 // ---------->    <----------
 //  same ccx        same ccx
 int* _idCov;  // this array should be changed on different CPU
+int core;
 int vcore;
 int zero = 0;
 thread_local int routingID;
@@ -16,9 +17,16 @@ thread_local int routingID;
 atomic_int lock = 0;
 atomic_int* waitArray;
 
+void init_routingID(int cpu) {
+	// cause for each thread it has to run once
+	// therefore the thread local can be set
+	routingID = _idCov[cpu];
+}
+
 void soa_spin_init(int num_of_vcore, int* tsp_order) {
 	// set vcore number
 	vcore = num_of_vcore;
+	// core = num_of_vcore / 2;
 	// init waitArray and idCov
 	waitArray = malloc(sizeof(int) * vcore);
 	_idCov = malloc(sizeof(int) * vcore);
@@ -30,7 +38,6 @@ void soa_spin_init(int num_of_vcore, int* tsp_order) {
 
 void spin_lock() {
 	// init routingID
-	routingID = _idCov[sched_getcpu()];
 	waitArray[routingID] = 1;
 	while (1) {
 		zero = 0;

@@ -21,6 +21,7 @@ struct timespec time_diff(struct timespec start, struct timespec end);
 
 void spin_init();
 void soa_spin_init(int num_of_vcore, int* tsp_order);
+void init_routingID(int cpu);
 
 void spin_lock();
 

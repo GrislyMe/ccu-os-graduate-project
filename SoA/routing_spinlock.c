@@ -10,7 +10,9 @@
 // 2 -> 1 -> 0 -> 4 -> 5 -> 3
 // ---------->    <----------
 //  same ccx        same ccx
-int idCov[num_of_vcore] = {3, 0, 4, 5, 7, 6, 2, 1, 15, 12, 14, 8, 11, 10, 9, 13};
+// int idCov[num_of_vcore] = {3, 0, 4, 5, 7, 6, 2, 1, 15, 12, 14, 8, 11, 10, 9, 13};
+// int idCov[num_of_vcore] = {1, 6, 5, 4, 7, 0, 3, 2, 9, 14, 15, 10, 11, 8, 12, 13};
+int idCov[num_of_vcore] = {5, 0, 3, 6, 2, 4, 7, 1, 15, 11, 8, 10, 9, 12, 13, 14};
 // this array should be changed on different CPU
 // int idCov[6] = {4, 0, 1, 2, 5, 3};
 atomic_llong counter = 0;
@@ -26,6 +28,7 @@ void thread(info* args) {
 	CPU_ZERO(&cpuset);
 	CPU_SET(cid, &cpuset);
 	sched_setaffinity(0, sizeof(cpuset), &cpuset);
+	init_routingID(cid);
 
 	struct timespec start;
 	struct timespec current;
