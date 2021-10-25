@@ -27,8 +27,8 @@ def toIDCov(route: str, ccx_num: int):
     for t in range(1, 1 + ccx_num):
         tmp = [0] * core_in_ccx
         ccx = [core for core in r[: -1] if (t - 1) * core_in_ccx <= core < t * core_in_ccx]
-        #if not t % 2:
-        #    ccx.reverse()
+        if not t % 2:
+            ccx.reverse()
         pre = ccx[0]
         ccx += [ccx[0]]
 
