@@ -1,18 +1,13 @@
 #define _GNU_SOURCE
-#include <assert.h>
-#include <math.h>
+#include "../lib/lock.h"
 #include <pthread.h>
-#include <signal.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/syscall.h>
 #include <sys/sysinfo.h>
 #include <unistd.h>
 
-pthread_spinlock_t lock;
+pthread_spinlock_t plock;
 long long int timeCost[16][16] = {0};
 int counter[16][16] = {0};
 int pre_cpu;
@@ -22,11 +17,10 @@ struct timespec previous;
 void thread(int arg) {
 	struct timespec current;
 	int cpu;
-	long diff;
 
-	for (int t = 0; t < 1000000; t++) {
+	for (int t = 0; t < 100; t++) {
 		// spin lock
-		pthread_spin_lock(&lock);
+		pthread_spin_lock(&plock);
 		// critical section
 
 		// load data from last modifyed core or memory
@@ -34,22 +28,19 @@ void thread(int arg) {
 			globalData[i] *= 25.242;
 
 		cpu = sched_getcpu();
-		clock_gettime(CLOCK_REALTIME, &current);
-		diff = current.tv_nsec - previous.tv_nsec;
+		clock_gettime(CLOCK_MONOTONIC, &current);
 
 		// remove some false data
-		if (diff > 0 && diff < 10000) {
-			timeCost[pre_cpu][cpu] += diff;
-			counter[pre_cpu][cpu]++;
-		}
+		timeCost[pre_cpu][cpu] += time_diff(current, previous).tv_nsec;
+		counter[pre_cpu][cpu]++;
 
 		// reset timer
-		clock_gettime(CLOCK_REALTIME, &current);
+		clock_gettime(CLOCK_MONOTONIC, &current);
 		pre_cpu = cpu;
 		previous = current;
 
 		// spin unlock
-		pthread_spin_unlock(&lock);
+		pthread_spin_unlock(&plock);
 
 		if (arg)
 			pthread_yield();
@@ -62,7 +53,7 @@ int main() {
 	const int num_of_thread = num_of_vcore * num_of_vcore;
 
 	globalData = (double*)malloc(sizeof(double) * 128);
-	pthread_spin_init(&lock, PTHREAD_PROCESS_PRIVATE);
+	pthread_spin_init(&plock, PTHREAD_PROCESS_PRIVATE);
 	int* arg = (int*)malloc(sizeof(int));
 
 	int scheduler = SCHED_FIFO;
@@ -84,18 +75,18 @@ int main() {
 	// create and join thread
 	pthread_t* tid = (pthread_t*)malloc(sizeof(pthread_t) * num_of_thread);
 
-	pthread_spin_lock(&lock);
+	// pthread_spin_lock(&plock);
 	for (int i = 0; i < num_of_thread; i++) {
 		*arg = i < (num_of_thread - num_of_vcore);
 		pthread_create(&tid[i], NULL, (void*)thread, arg);
 		pthread_setaffinity_np(tid[i], sizeof(cpu_set_t), &cpusets[i % num_of_vcore]);
 	}
-	pthread_spin_unlock(&lock);
+	pthread_spin_unlock(&plock);
 
 	for (int i = 0; i < num_of_thread; i++)
 		pthread_join(tid[i], NULL);
 
-	pthread_spin_destroy(&lock);
+	pthread_spin_destroy(&plock);
 
 	FILE* out = fopen("result", "a+");
 	for (int i = 0; i < num_of_vcore; i++)

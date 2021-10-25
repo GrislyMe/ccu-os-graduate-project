@@ -15,9 +15,8 @@ def getTime(core_num):
         for i in output.readlines():
             t, c, s, d = map(int, i.split())
 
-            if(s >= 0 and d >= 0):
-                time[s][d] += t
-                count[s][d] += c
+            time[s][d] += t
+            count[s][d] += c
     return time // count
 
 def toIDCov(route: str, ccx_num: int):
@@ -46,7 +45,7 @@ def main():
         return
     cpu = list(range(core_num))
 
-    time = getTime(core_num)
+    time = np.nan_to_num(getTime(core_num))
 
     fig, ax = plt.subplots()
     im = ax.imshow(time)
@@ -84,11 +83,11 @@ def main():
         webbrowser.open(image.link, new=2)
         print(image.link)
     else:
-        for i in range(core_num):
-            for j in range(core_num):
-                ax.text(j, i, int(time[i, j]),
-                               ha="center", va="center",
-                               color=textcolors[int(norm[i, j] > 0.5)])
+        #for i in range(core_num):
+        #    for j in range(core_num):
+        #        ax.text(j, i, int(time[i, j]),
+        #                       ha="center", va="center",
+        #                       color=textcolors[int(norm[i, j] > 0.5)])
         plt.show()
 
     route = TSP_order.main(time, 1)
