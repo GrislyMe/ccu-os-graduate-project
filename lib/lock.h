@@ -10,15 +10,12 @@ typedef struct mcs_node {
 } mcs_node;
 
 typedef struct info {
-	int rs_label;
+	int rs_size;
 	int cid;
 } info;
 
-// extern int zero;
-// extern atomic_int lock;
-// extern atomic_ulong gtk;
-// extern unsigned long srv;
-// extern _Atomic struct mcs_node* tail;
+extern int rs_set[];
+extern int rs_set_size;
 
 struct timespec time_diff(struct timespec start, struct timespec end);
 

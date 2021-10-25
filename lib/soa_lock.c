@@ -31,6 +31,7 @@ void spin_lock() {
 	routingID = _idCov[sched_getcpu()];
 	waitArray[routingID] = 1;
 	while (1) {
+		// asm("pause");
 		zero = 0;  // let the variable "zero" always contain the value '0'
 		if (waitArray[routingID] == 0)
 			return;

@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 import webbrowser
 
 def getCost(file_name: str):
-    ret = [0] * 10
+    ret = [0] * 11
     idx = 0
     with open(file_name, "r") as inputFile:
         for idx, line in enumerate(inputFile.readlines()):
-            ret[idx % 10] += int(line.split()[1])
+            ret[idx % 11] += int(line.split()[1])
     return [item / idx for item in ret]
 
 def main():
@@ -20,7 +20,7 @@ def main():
         print("failed to get vcore_number")
         return
 
-    x = ["160k", "120k", "80k", "40k", "20k", "10k", "5k", "1k", "0.5k", "0.1k"]
+    x = ["160k", "120k", "80k", "40k", "20k", "10k", "5k", "2.5k", "1k", "0.5k", "0.1k"]
     xi = list(range(len(x)))
     y = getCost("../plock/plock_lps")
     line = plt.plot(xi, y, label = "plock")

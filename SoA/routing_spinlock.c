@@ -5,37 +5,36 @@
 #include <stdlib.h>
 #include <threads.h>
 
-#define num_of_vcore 6
+#define num_of_vcore 16
 
 // 2 -> 1 -> 0 -> 4 -> 5 -> 3
 // ---------->    <----------
 //  same ccx        same ccx
-//int idCov[num_of_vcore] = {3, 0, 4, 5, 7, 6, 2, 1, 11, 14, 13, 12, 9, 15, 10, 8};
+int idCov[num_of_vcore] = {3, 0, 4, 5, 7, 6, 2, 1, 11, 14, 13, 12, 9, 15, 10, 8};
 // this array should be changed on different CPU
-int idCov[6] = {4, 0, 1, 2, 5, 3};
-int rs_set[] = {160000, 120000, 80000, 40000, 20000, 10000, 5000, 1000, 500, 100};
+// int idCov[6] = {4, 0, 1, 2, 5, 3};
 atomic_llong counter = 0;
 // atomic_llong counter;
 int globalData[300] = {0};
-struct timespec start;
 
 void thread(info* args) {
 	int cid = args->cid;
-	int rsID = args->rs_label;
+	int rs_size = args->rs_size;
+
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
 	CPU_SET(cid, &cpuset);
 	sched_setaffinity(0, sizeof(cpuset), &cpuset);
 
+	struct timespec start;
 	struct timespec current;
 	struct timespec rs_start;
-    struct timespec rs_end;
-	int rs = rs_set[rsID];
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	clock_gettime(CLOCK_MONOTONIC, &current);
 
 	while (1) {
-        clock_gettime(CLOCK_MONOTONIC, &current);
-        if(time_diff(start, current).tv_sec > 10)
-            break;
+		if (time_diff(start, current).tv_sec > 10)
+			break;
 
 		spin_lock();  // lock
 		// CS
@@ -46,12 +45,12 @@ void thread(info* args) {
 		spin_unlock();  // unlock
 
 		clock_gettime(CLOCK_MONOTONIC, &rs_start);
-	    while(1){
-            clock_gettime(CLOCK_MONOTONIC, &rs_end);
-            if(time_diff(rs_start, rs_end).tv_nsec > rs)
-                break;
-        }
-    }
+		while (1) {
+			clock_gettime(CLOCK_MONOTONIC, &current);
+			if (time_diff(rs_start, current).tv_nsec > rs_size)
+				break;
+		}
+	}
 }
 
 int main() {
@@ -62,7 +61,7 @@ int main() {
 		args[i].cid = i;
 	}
 
-	for (int j = 0; j < 10; j++) {
+	for (int j = 0; j < rs_set_size; j++) {
 		// create and join thread
 		counter = 0;
 		printf("%d\n", rs_set[j]);
@@ -71,11 +70,10 @@ int main() {
 
 		// pthread_spin_lock(&lock);
 		for (int i = 0; i < num_of_thread; i++) {
-			args[i].rs_label = j;
+			args[i].rs_size = rs_set[j];
 			pthread_create(&tid[i], NULL, (void*)thread, &args[i]);
 		}
 
-        clock_gettime(CLOCK_MONOTONIC, &start);
 		// pthread_spin_unlock(&lock);
 		for (int i = 0; i < num_of_thread; i++)
 			pthread_join(tid[i], NULL);
