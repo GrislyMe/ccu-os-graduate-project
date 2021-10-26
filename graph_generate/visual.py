@@ -14,9 +14,6 @@ def getTime(core_num):
     with open("../misc/result", 'r') as output:
         for i in output.readlines():
             t, c, s, d = map(int, i.split())
-            #if s == d:
-            #    t = 0;
-            #    c = 0;
 
             time[s][d] += t
             count[s][d] += c

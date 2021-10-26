@@ -7,6 +7,12 @@
 #include <sys/sysinfo.h>
 #include <unistd.h>
 
+#define error_mask 4000
+// error_mask will limit the ns of a thread switch
+// for how to determine the value can observe the core(n) to core(n) time
+// cause we already use sleep(0)
+// any core(n) to core(n) will count as an error
+
 pthread_spinlock_t plock;
 long long int timeCost[16][16] = {0};
 long long int counter[16][16] = {0};
@@ -33,7 +39,7 @@ void thread(int arg) {
 
 		// remove some false data
 		diff = time_diff(previous, current).tv_nsec;
-		if (diff < 5000) {
+		if (diff < error_mask) {
 			timeCost[pre_cpu][cpu] += diff;
 			counter[pre_cpu][cpu]++;
 		}
@@ -61,11 +67,11 @@ int main() {
 	pthread_spin_init(&plock, PTHREAD_PROCESS_PRIVATE);
 	int* arg = (int*)malloc(sizeof(int));
 
-	int scheduler = SCHED_FIFO;
-	struct sched_param param = {.sched_priority = 0};
-	param.sched_priority = sched_get_priority_max(scheduler);
-	sched_setscheduler(0, scheduler, &param);
-	printf("scheduler: %d scheduler priority: %d\n", sched_getscheduler(0), param.sched_priority);
+	// int scheduler = SCHED_FIFO;
+	// struct sched_param param = {.sched_priority = 0};
+	// param.sched_priority = sched_get_priority_max(scheduler);
+	// sched_setscheduler(0, scheduler, &param);
+	// printf("scheduler: %d scheduler priority: %d\n", sched_getscheduler(0), param.sched_priority);
 
 	// clock and cpu init
 	pre_cpu = sched_getcpu();
