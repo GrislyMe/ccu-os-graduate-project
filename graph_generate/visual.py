@@ -14,6 +14,9 @@ def getTime(core_num):
     with open("../misc/result", 'r') as output:
         for i in output.readlines():
             t, c, s, d = map(int, i.split())
+            #if s == d:
+            #    t = 0;
+            #    c = 0;
 
             time[s][d] += t
             count[s][d] += c
@@ -83,11 +86,11 @@ def main():
         webbrowser.open(image.link, new=2)
         print(image.link)
     else:
-        #for i in range(core_num):
-        #    for j in range(core_num):
-        #        ax.text(j, i, int(time[i, j]),
-        #                       ha="center", va="center",
-        #                       color=textcolors[int(norm[i, j] > 0.5)])
+        for i in range(core_num):
+            for j in range(core_num):
+                ax.text(j, i, int(time[i, j]),
+                               ha="center", va="center",
+                               color=textcolors[int(norm[i, j] > 0.5)])
         plt.show()
 
     route = TSP_order.main(time, 1)

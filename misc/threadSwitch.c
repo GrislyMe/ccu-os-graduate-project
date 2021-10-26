@@ -9,7 +9,7 @@
 
 pthread_spinlock_t plock;
 long long int timeCost[16][16] = {0};
-int counter[16][16] = {0};
+long long int counter[16][16] = {0};
 int pre_cpu;
 double* globalData;
 struct timespec previous;
@@ -17,6 +17,7 @@ struct timespec previous;
 void thread(int arg) {
 	struct timespec current;
 	int cpu;
+	long diff;
 
 	for (int t = 0; t < 100; t++) {
 		// spin lock
@@ -31,8 +32,11 @@ void thread(int arg) {
 		clock_gettime(CLOCK_MONOTONIC, &current);
 
 		// remove some false data
-		timeCost[pre_cpu][cpu] += time_diff(current, previous).tv_nsec;
-		counter[pre_cpu][cpu]++;
+		diff = time_diff(previous, current).tv_nsec;
+		if (diff < 5000) {
+			timeCost[pre_cpu][cpu] += diff;
+			counter[pre_cpu][cpu]++;
+		}
 
 		// reset timer
 		clock_gettime(CLOCK_MONOTONIC, &current);
@@ -42,15 +46,16 @@ void thread(int arg) {
 		// spin unlock
 		pthread_spin_unlock(&plock);
 
-		if (arg)
-			pthread_yield();
+		// if (arg)
+		// pthread_yield();
+		sleep(0);
 	}
 }
 
 int main() {
 	// init
 	const int num_of_vcore = get_nprocs();
-	const int num_of_thread = num_of_vcore * num_of_vcore;
+	const int num_of_thread = num_of_vcore;
 
 	globalData = (double*)malloc(sizeof(double) * 128);
 	pthread_spin_init(&plock, PTHREAD_PROCESS_PRIVATE);
@@ -92,7 +97,7 @@ int main() {
 	for (int i = 0; i < num_of_vcore; i++)
 		for (int k = 0; k < num_of_vcore; k++)
 			if (counter[i][k])
-				fprintf(out, "%lld %d %d %d\n", timeCost[i][k], counter[i][k], i, k);
+				fprintf(out, "%lld %lld %d %d\n", timeCost[i][k], counter[i][k], i, k);
 
 	fclose(out);
 	return 0;

@@ -11,8 +11,7 @@
 // ---------->    <----------
 //  same ccx        same ccx
 // int idCov[num_of_vcore] = {3, 0, 4, 5, 7, 6, 2, 1, 15, 12, 14, 8, 11, 10, 9, 13};
-// int idCov[num_of_vcore] = {1, 6, 5, 4, 7, 0, 3, 2, 9, 14, 15, 10, 11, 8, 12, 13};
-int idCov[num_of_vcore] = {5, 0, 3, 6, 2, 4, 7, 1, 15, 11, 8, 10, 9, 12, 13, 14};
+int idCov[] = {6, 2, 7, 4, 0, 1, 5, 3, 10, 12, 14, 8, 11, 15, 13, 9};
 // this array should be changed on different CPU
 // int idCov[6] = {4, 0, 1, 2, 5, 3};
 atomic_llong counter = 0;
