@@ -12,6 +12,7 @@ typedef struct mcs_node {
 typedef struct info {
 	int rs_size;
 	int cid;
+	long long int lps;
 } info;
 
 extern int rs_set[];
