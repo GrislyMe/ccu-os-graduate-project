@@ -10,7 +10,7 @@ def getCost(file_name: str):
     idx = 0
     with open(file_name, "r") as inputFile:
         for idx, line in enumerate(inputFile.readlines()):
-            ret[idx % 11] += int(line.split()[1])
+            ret[idx % 11] += sum(map(int, line.split()[1:]))
     return [item / idx for item in ret]
 
 def main():
