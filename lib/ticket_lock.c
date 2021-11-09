@@ -2,7 +2,7 @@
 #include "lock.h"
 
 atomic_ulong gtk = 0;
-unsigned long srv = 0;
+atomic_ulong srv = 0;
 
 void ticket_lock() {
 	unsigned long ltk = atomic_fetch_add(&gtk, 1);
@@ -11,5 +11,5 @@ void ticket_lock() {
 }
 
 void ticket_unlock() {
-	srv++;
+	atomic_fetch_add(&srv, 1);
 }
