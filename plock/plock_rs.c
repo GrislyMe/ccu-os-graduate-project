@@ -1,4 +1,3 @@
-#include <sys/types.h>
 #define _GNU_SOURCE
 #include "../lib/lock.h"
 #include <pthread.h>
@@ -62,7 +61,7 @@ int main() {
 
 		for (int i = 0; i < num_of_thread; i++) {
 			pthread_join(tid[i], NULL);
-			ans += args[i].ret;
+			ans += args[i].lps;
 		}
 
 		FILE* out = fopen("plock_lps", "a");
