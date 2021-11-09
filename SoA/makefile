@@ -8,7 +8,7 @@ EXE = $(patsubst %.c, %, $(SRC))
 .PHONY: all
 all: $(EXE)
 
-%: %.c
+%: %.c $(LIB)
 	$(CC) $(CFLAGS) $(LIB) $*.c -o $@
 
 .PHONY: clean
