@@ -43,9 +43,9 @@ int main() {
 	// init
 	int num_of_thread = num_of_vcore;  // * num_of_vcore;
 	info args[num_of_thread];
-	long long int ans = 0;
 
 	for (int j = 0; j < rs_set_size; j++) {
+		unsigned long long int ans = 0;
 		printf("%d\n", rs_set[j]);
 		pthread_t* tid = (pthread_t*)malloc(sizeof(pthread_t) * num_of_thread);
 

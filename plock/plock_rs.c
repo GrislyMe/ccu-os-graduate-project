@@ -48,9 +48,9 @@ int main() {
 	// init
 	int num_of_thread = num_of_vcore;
 	info args[num_of_vcore];
-	long long int ans = 0;
 	spin_init();
 	for (int k = 0; k < rs_set_size; k++) {
+		unsigned long long int ans = 0;
 		printf("%d\n", rs_set[k]);
 		pthread_t* tid = (pthread_t*)malloc(sizeof(pthread_t) * num_of_thread);
 
