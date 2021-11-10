@@ -38,9 +38,9 @@ def main():
     line = plt.plot(xi, y, label = "mcs_spinlock")
     plt.setp(line, marker = "x")
 
-    y = getCost("../plock/plock_lps.bak")
-    line = plt.plot(xi, y, label = "plock_lps_old")
-    plt.setp(line, marker = "v")
+    #y = getCost("../plock/plock_lps.bak")
+    #line = plt.plot(xi, y, label = "plock_lps_old")
+    #plt.setp(line, marker = "v")
 
     plt.title("Lock Per Sec")
     plt.xticks(xi, x)
