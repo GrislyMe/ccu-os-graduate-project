@@ -1,3 +1,4 @@
+#include <stdalign.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <time.h>
@@ -14,6 +15,11 @@ typedef struct info {
 	int cid;
 	unsigned long long int lps;
 } info;
+
+struct wait {
+	atomic_int value;
+	alignas(64) char memory[64];
+};
 
 extern int rs_set[];
 extern int rs_set_size;

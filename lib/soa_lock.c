@@ -1,10 +1,9 @@
-#include "lock.h"
+#include "./lock.h"
 #define _GNU_SOURCE
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <threads.h>
-#include <stdalign.h>
 // 2 -> 1 -> 0 -> 4 -> 5 -> 3
 // ---------->    <----------
 //  same ccx        same ccx
@@ -15,11 +14,7 @@ int zero = 0;
 thread_local int routingID;
 
 atomic_int lock = 0;
-struct wait{
-	atomic_int value;
-	alignas(64) char memory[64];
-};
-//atomic_int *waitArray;
+// atomic_int *waitArray;
 struct wait* waitArray;
 
 void init_routingID(int cpu) {
@@ -33,11 +28,11 @@ void soa_spin_init(int num_of_vcore, int* tsp_order) {
 	vcore = num_of_vcore;
 	// core = num_of_vcore / 2;
 	// init waitArray and idCov
-	//waitArray = malloc(sizeof(atomic_int) * vcore);
+	// waitArray = malloc(sizeof(atomic_int) * vcore);
 	waitArray = malloc(sizeof(struct wait) * vcore);
 	_idCov = malloc(sizeof(int) * vcore);
 	for (int i = 0; i < num_of_vcore; i++) {
-		//waitArray[i] = malloc(sizeof(int) * vcore);
+		// waitArray[i] = malloc(sizeof(int) * vcore);
 		waitArray[i].value = 0;
 		_idCov[i] = tsp_order[i];
 	}
