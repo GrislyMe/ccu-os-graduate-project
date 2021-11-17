@@ -13,3 +13,5 @@ result
 __pycache__/*
 
 *.bak
+
+*.pdf
